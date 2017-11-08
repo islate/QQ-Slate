@@ -42,6 +42,29 @@ typedef void (^TencentWrapperLoginBlock)(BOOL success, NSError * _Nullable error
     return sharedInstance;
 }
 
++ (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize ratio:(double)r offset:(CGPoint)offset
+{
+    int h = newSize.height;
+    int w = newSize.width;
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef    context = CGBitmapContextCreate(NULL, w, h, 8, 4 * w, colorSpace, (CGBitmapInfo)kCGImageAlphaPremultipliedFirst);
+    
+    CGContextScaleCTM(context, r, r);
+    
+    CGRect rect = CGRectMake(offset.x, offset.y, image.size.width, image.size.height);
+    CGContextDrawImage(context, rect, image.CGImage);
+    CGImageRef imageTrimmed = CGBitmapContextCreateImage(context);
+    
+    UIImage *img = [UIImage imageWithCGImage:imageTrimmed];
+    
+    CGColorSpaceRelease(colorSpace);
+    CGImageRelease(imageTrimmed);
+    CGContextRelease(context);
+    
+    return img;
+}
+
 - (void)qqShareWithContent:(NSString *)content
                        url:(NSString *)sourceUrl
                      image:(UIImage *)image
@@ -73,12 +96,21 @@ typedef void (^TencentWrapperLoginBlock)(BOOL success, NSError * _Nullable error
         
         if (sourceUrl != nil && ![sourceUrl isEqualToString:@""])
         {
-            NSData *preImg = UIImagePNGRepresentation(image);
-            if (title.length > 50)
-            {
-                title = [title substringToIndex:50];
+            CGFloat height = image.size.height * 300 / image.size.width;
+            UIImage *previewImage = [TencentWrapper imageWithImage:image scaledToSize:CGSizeMake(300, height) ratio:1.0 offset:CGPointZero];
+            NSData *previewData = UIImagePNGRepresentation(previewImage);
+            
+            if (image.size.width > 600 || image.size.height > 600) {
+                NSData *imageData = UIImagePNGRepresentation(image);
+                message = [QQApiImageObject objectWithData:imageData previewImageData:previewData title:title description:content];
             }
-            message = [QQApiNewsObject objectWithURL:[NSURL URLWithString:sourceUrl] title:title description:content previewImageData:preImg];
+            else {
+                if (title.length > 50)
+                {
+                    title = [title substringToIndex:50];
+                }
+                message = [QQApiNewsObject objectWithURL:[NSURL URLWithString:sourceUrl] title:title description:content previewImageData:previewData];
+            }
         }
         else
         {

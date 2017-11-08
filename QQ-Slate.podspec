@@ -2,12 +2,12 @@
 Pod::Spec.new do |s|
 
   s.name         = "QQ-Slate"
-  s.version      = "0.1.0"
+  s.version      = "0.1.1"
   s.summary      = "Slate QQ Wrapper."
 
 
   s.description  = <<-DESC
-		   Slate QQ Wrapper. SDK ver 0.1.0
+		   Slate QQ Wrapper. SDK ver 0.1.1
 	
                    DESC
 
